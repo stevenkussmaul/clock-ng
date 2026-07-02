@@ -79,7 +79,7 @@
       font-weight:700;
       line-height:1;
       /* responsive font-size with min and max */
-      font-size: clamp(var(--clock-min), 65vmin, var(--clock-max));
+      font-size: 32vmax;
       letter-spacing: -0.02em;
       display:inline-block;
       vertical-align: baseline;
@@ -87,7 +87,7 @@
 
     /* Seconds are smaller, aligned to baseline, no huge top margin */
     #seconds{
-      font-size: clamp(14px, 10vmin, 64px);
+      font-size: 10vmax;
       color: var(--accent);
       opacity: 0.95;
       display:inline-block;
