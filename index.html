@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <style>
+    /* * {outline: 2px solid red} */
+
     body { 
         margin: 0; 
         background: #000; 
@@ -14,9 +16,9 @@
         justify-content: space-between; 
         align-items: center; 
         height: 100vh; 
-        overflow: hidden; 
+        overflow: clip; 
         padding: 0 0; 
-        box-sizing: border-box;
+        box-sizing: content-box;
     }
 
     #date { 
@@ -27,6 +29,7 @@
         font-size: 10vmin; 
         color: #aaa; 
         text-transform: capitalize; 
+        padding-top: 0vh
     }
     
     #clock-container { 
@@ -35,11 +38,13 @@
         flex-direction: row; 
         align-items: center; 
         /* Change from center to flex-end to anchor the clock to the right side */
-        justify-content: flex-end; 
+        justify-content: right; 
         width: 100%;
         /* Add a little padding so it doesn't touch the very edge of the screen */
-        padding-right: 0%;
-        box-sizing: border-box; 
+        padding-right: 2%;
+        box-sizing: content-box; 
+        container-type: size;
+
     }
     
     #info-container { 
@@ -51,17 +56,19 @@
     }
 
     #clock { 
-        font-size: 65vmin; 
+        font-size: 32vmax;
+                /* font-size: 110cqh;  */
         font-weight: bold; 
         line-height: 1;
+        margin: 0;
         /* font-variant-numeric: tabular-nums; */
     }
     
     /* Seconds are now scaled relative to the same vmin unit */
     #seconds { 
-        font-size: 10vmin; margin-left: 1vmin; margin-right: 1%; color: #666; 
+        font-size: 10vmax;  margin-right: 0.1vmax; margin-left: 0.1vmax; color: #ddd; 
         /* Aligns seconds nicely to the baseline of the larger numbers */
-        margin-top: 30vh; 
+        margin-top: 10vmax; 
     }
 
     #weather { font-size: 5vmin; color: #ccc; }
@@ -73,7 +80,7 @@
     <div id="date">Loading date...</div>
     
     <div id="clock-container">
-        <span id="clock">0:00</span><span id="seconds">:00</span>
+        <span id="clock">88:88</span><span id="seconds">:88</span>
     </div>
 
     <div id="info-container">
@@ -105,7 +112,7 @@
             const s = now.getSeconds();
 
             // Define trigger hours: 01:00, 06:00, 12:00, 18:00
-            const triggerHours = [1, 6, 8, 10, 12, 18];
+            const triggerHours = [1, 6, 8, 9, 10, 12, 13, 14, 15, 17, 18];
 
             if (triggerHours.includes(h) && m === 9 && lastUpdatedHour !== h) {
                     updateWeather();
@@ -134,7 +141,7 @@
             
             // Background dimming logic
             const times = SunCalc.getTimes(now, lat, lon);
-            document.body.style.opacity = (now >= times.sunset || now <= times.sunrise) ? "0.2" : "1.0";
+            document.body.style.opacity = (now >= times.sunset || now <= times.sunrise) ? "0.2" : "0.70";
         }
 
         // Keep the clock running
