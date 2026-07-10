@@ -144,77 +144,89 @@
 
   <script>
     // Location (fixed for now)
-    const lat = 42.5074;
-    const lon = -82.9369;
+  const lat = 42.5074;
+  const lon = -82.9369;
 
-    // Elements
-    const elDate = document.getElementById('date');
-    const elClock = document.getElementById('clock');
-    const elSeconds = document.getElementById('seconds');
-    const elWeather = document.getElementById('weather');
-    const elAstro = document.getElementById('astro');
-    const rootBody = document.body;
+  // Elements
+  const elDate = document.getElementById('date');
+  const elClock = document.getElementById('clock');
+  const elSeconds = document.getElementById('seconds');
+  const elWeather = document.getElementById('weather');
+  const elAstro = document.getElementById('astro');
+  const rootBody = document.body;
 
-    // Helper: format time without AM/PM, 12-hour no leading zero on hour
-    function formatTime(now){
-      // Use options to get hour/min but strip AM/PM reliably
-      const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      return timeString.replace(/\s[AP]M$/, "");
-    }
+  // Helper: format time without AM/PM, 12-hour no leading zero on hour
+  function formatTime(now){
+    const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    // Strip AM/PM, explicitly accounting for standard spaces and modern Narrow No-Break Spaces (\u202F)
+    return timeString.replace(/[\s\u202F]*[AP]M/i, "");
+  }
 
-    function updateClock(now = new Date()){
-      elDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year:'numeric', month:'long', day:'numeric' });
-      elClock.textContent = formatTime(now);
-      elSeconds.textContent = now.getSeconds().toString().padStart(2,'0');
+  // Weather fetch: open-meteo current and daily (fahrenheit), timezone auto
+  async function updateWeather(){
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`;
+      const resp = await fetch(url, {cache: "no-store"});
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
 
-      // Dimming: use SunCalc and toggle a class (safer than opacity)
-      try {
-        const times = SunCalc.getTimes(now, lat, lon);
-        const isNight = (now >= times.sunset || now <= times.sunrise);
-        rootBody.classList.toggle('dim', isNight);
+      const currentTemp = data.current_weather?.temperature;
+      const high = data.daily?.temperature_2m_max?.[0];
+      const low  = data.daily?.temperature_2m_min?.[0];
 
-        // Also update astro display so it stays in sync with the current date
-        elAstro.textContent = `Sunrise: ${times.sunrise.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})} | Sunset: ${times.sunset.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}`;
-      } catch (e){
-        // If SunCalc fails, remove dim class
-        rootBody.classList.remove('dim');
+      if (typeof currentTemp === 'number') {
+        elWeather.textContent = `Temp: ${Math.round(currentTemp)}°F | High: ${high ? Math.round(high) : '–'}° | Low: ${low ? Math.round(low) : '–'}°`;
+      } else {
+        elWeather.textContent = "Weather data unavailable";
       }
+    } catch (err){
+      elWeather.textContent = "Weather unavailable";
     }
+  }
+// Create a global variable to store the dim state
+  let isNightTime = false;
 
-    // Weather fetch: open-meteo current and daily (fahrenheit), timezone auto
-    async function updateWeather(){
-      try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`;
-        const resp = await fetch(url, {cache: "no-store"});
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
+  function updateSolarData(now = new Date()) {
+    if (typeof SunCalc !== 'undefined') {
+      const times = SunCalc.getTimes(now, lat, lon);
+      
+      // Update our global state tracking night time
+      isNightTime = (now >= times.sunset || now <= times.sunrise);
+      rootBody.classList.toggle('dim', isNightTime);
 
-        // open-meteo returns current_weather.temperature, daily arrays
-        const currentTemp = data.current_weather?.temperature;
-        const high = data.daily?.temperature_2m_max?.[0];
-        const low  = data.daily?.temperature_2m_min?.[0];
-
-        if (typeof currentTemp === 'number') {
-          elWeather.textContent = `Temp: ${Math.round(currentTemp)}°F | High: ${high ? Math.round(high) : '–'}° | Low: ${low ? Math.round(low) : '–'}°`;
-        } else {
-          elWeather.textContent = "Weather data unavailable";
-        }
-      } catch (err){
-        elWeather.textContent = "Weather unavailable";
-      }
+      // Update the text display
+      elAstro.textContent = `Sunrise: ${times.sunrise.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})} | Sunset: ${times.sunset.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}`;
     }
+  }
 
-    // Update loop: clock every second, weather on load + every 30 minutes
+  function updateClock(now = new Date()){
+    elDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year:'numeric', month:'long', day:'numeric' });
+    elClock.textContent = formatTime(now);
+    elSeconds.textContent = now.getSeconds().toString().padStart(2,'0');
+
+    // Instead of calculating math every second, just check the pre-calculated variable.
+    // However, if it hits exactly midnight, we should double check the state.
+    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+      updateSolarData(now);
+    } else {
+      rootBody.classList.toggle('dim', isNightTime);
+    }
+  }
+
+  // Inside your DOMContentLoaded block:
+  document.addEventListener('DOMContentLoaded', () => {
+    // Run everything immediately on load
+    updateSolarData(); 
     updateClock();
     updateWeather();
-    setInterval(updateClock, 1000);
-    setInterval(updateWeather, 30 * 60 * 1000); // 30 minutes
 
-    // Ensure first SunCalc-based dim state is applied after SunCalc loads
-    window.addEventListener('load', () => {
-      updateClock(new Date());
-      updateWeather();
-    });
+    // Set intervals appropriately
+    setInterval(updateClock, 1000);              // Clock ticking every second
+    setInterval(updateSolarData, 60 * 60 * 1000); // Recalculate sun times once every hour
+    setInterval(updateWeather, 30 * 60 * 1000);   // Fetch weather every 30 minutes
+  });
+
+    
   </script>
 </body>
 </html>
