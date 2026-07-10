@@ -52,7 +52,8 @@
       justify-content:center;
       padding: calc(var(--edge-padding) / 2) var(--edge-padding);
       color: var(--muted);
-      font-size: clamp(1rem, 4vmin, 2.2rem);
+      /* Maximized text sizing */
+      font-size: clamp(1.5rem, 6vmin, 3.5rem); 
       text-transform: capitalize;
       text-align:center;
     }
@@ -70,7 +71,7 @@
     /* Small wrapper so the clock + seconds align on baseline */
     .time-wrap{
       display:flex;
-      align-items:baseline; /* aligns seconds to the baseline of the big number */
+      align-items:baseline;
       gap: 1vmin;
     }
 
@@ -78,16 +79,16 @@
     #clock{
       font-weight:700;
       line-height:1;
-      /* responsive font-size with min and max */
-      font-size: 32vmax;
+      /* Maximized widescreen clock size */
+      font-size: 40vmax; 
       letter-spacing: -0.02em;
       display:inline-block;
       vertical-align: baseline;
     }
 
-    /* Seconds are smaller, aligned to baseline, no huge top margin */
+    /* Seconds */
     #seconds{
-      font-size: 10vmax;
+      font-size: 12vmax;
       color: var(--accent);
       opacity: 0.95;
       display:inline-block;
@@ -106,23 +107,24 @@
       box-sizing:border-box;
     }
 
-    #weather{ font-size: clamp(0.8rem, 3.2vmin, 1.2rem); color:var(--info); }
-    #astro  { font-size: clamp(0.7rem, 3vmin, 1.05rem); color:var(--astro); }
+    /* Maximized info strings */
+    #weather{ font-size: clamp(1.2rem, 4.5vmin, 2rem); color:var(--info); }
+    #astro  { font-size: clamp(1.1rem, 4vmin, 1.8rem); color:var(--astro); }
 
-    /* Narrow-screen adjustments: center the clock and reduce huge fonts */
+    /* Narrow-screen adjustments: center the clock and recalculate huge fonts */
     @media (max-width:720px){
       #clock-container { justify-content:center; padding-right: 8vmin; }
-      #clock { font-size: clamp(36px, 40vmin, 260px); }
+      #clock { font-size: clamp(48px, 45vmin, 300px); }
       .time-wrap { gap: 2vmin; }
       #seconds { transform: translateY(10%); }
     }
 
-    /* Very small phones */
+    /* Very small phones vertically stacked */
     @media (max-width:380px){
       :root { --edge-padding: 3vmin; }
-      #date { font-size: 1rem; }
-      #clock { font-size: clamp(28px, 36vmin, 220px); }
-      #seconds { font-size: clamp(12px, 8vmin, 44px); }
+      #date { font-size: 1.2rem; }
+      #clock { font-size: clamp(36px, 42vmin, 250px); }
+      #seconds { font-size: clamp(16px, 10vmin, 50px); }
     }
   </style>
 </head>
